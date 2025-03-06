@@ -53,7 +53,7 @@ io.on("connection", (socket) => {
     console.log("Message from client:", data.msg, "for ", data.socketId);
     io.to(data.socketId).emit("message", { message: data.msg });
   });
-  socket.on("requestFile", async (data, cb) => {
+  socket.on("requestFile", async (data) => {
     const user = await File.aggregate([
       {
         $match: { filePath: data.filePath },
@@ -72,16 +72,11 @@ io.on("connection", (socket) => {
     ]);
     console.log("User:", user);
     io.to(user[0].socketId).emit("file", { filePath: data.filePath });
-    return cb({
-      success: true,
-      ownerIp: user.ip_address,
-      message: "File request sent",
-    });
   });
   socket.on("disconnect", async () => {
     console.log("Client disconnected:", socket.id);
     const user = await User.findOne({ socketId: socket.id });
-    // await File.deleteMany({ owner: user._id });
+    await File.deleteMany({ owner: user._id });
   });
 });
 

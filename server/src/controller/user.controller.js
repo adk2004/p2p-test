@@ -14,15 +14,15 @@ const getGroupMessages = asyncHandler(async (req, res) => {
 });
 
 const getDirectMessages = asyncHandler(async (req, res) => {
-  const { userId } = req.query;
-  if (!userId) {
+  const { userId } = req.params;
+  if (!userId || !req.user._id || userId === req.user._id) {
     throw new ApiError(400, "User Id is required");
   }
   try {
     const messages = await Message.find({
       type: "direct",
-      for: userId,
-    }).populate("owner");
+      $or: [{ $and: [{ owner: req.user._id }, { for: userId }] }, { $and: [{ owner: userId }, { for: req.user._id }] }]
+    }).populate("owner", "for");
     res.status(200).json(messages);
   } catch (error) {
     throw new ApiError(
@@ -32,4 +32,42 @@ const getDirectMessages = asyncHandler(async (req, res) => {
   }
 });
 
-export { getGroupMessages, getDirectMessages };
+const getUsers = asyncHandler(async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (error) {
+    throw new ApiError(500, "Internal Server Error");
+  }
+});
+
+const getFiles =  asyncHandler(async (req, res) => {
+  try {
+    const files = await File.find();
+    res.status(200).json(files);
+  } catch (error) {
+    throw new ApiError(500, "Internal Server Error");
+  }
+});
+
+const requestFileIp = asyncHandler(async (req, res) => {
+  const { fileId } = req.params;
+  if (!fileId) {
+    throw new ApiError(400, "File Id is required");
+  }
+  try {
+    const file = await File.findById(fileId);
+    if (!file) {
+      throw new ApiError(404, "File not found");
+    }
+    
+    res.status(200).json(file.ip);
+  } catch (error) {
+    throw new ApiError(
+      error.statusCode || 500,
+      error.message || "Internal Server Error"
+    );
+  }
+});
+
+export { getGroupMessages, getDirectMessages, getUsers, getFiles, requestFileIp };

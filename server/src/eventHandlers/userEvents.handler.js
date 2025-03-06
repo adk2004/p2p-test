@@ -29,6 +29,7 @@ const registerHandler = async (socket, data) => {
       File.create({
         path: file.path,
         name: file.name,
+        ip,
         fileType: file.type,
         owner: newUser._id,
       })

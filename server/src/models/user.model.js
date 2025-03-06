@@ -29,6 +29,11 @@ const userSchema = new Schema(
       sparse: true,
       default: null,
     },
+    status: {
+      type: String,
+      enum: ["online", "offline"],
+      default: "online",
+    },
     socketId: {
       type: String,
       required: true,

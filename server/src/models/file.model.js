@@ -15,6 +15,10 @@ const fileSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+    ip: {
+      type : String,
+      required : true,
+    },
     fileType: {
       type: String,
       lowercase: true,
