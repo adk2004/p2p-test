@@ -6,12 +6,18 @@ function getLocalIPAddress() {
   for (const interfaceName in networkInterfaces) {
     const interfaceInfo = networkInterfaces[interfaceName];
     for (const net of interfaceInfo) {
-      if (net.family === "IPv4" && !net.internal) {
+       if (
+        net.family === "IPv4" &&
+        !net.internal &&
+        (interfaceName === "Ethernet 2")
+      ) { {
+        // console.log(net.address);
         return net.address;
+        }
       }
     }
   }
 
   return "Unable to determine IP address";
 }
-export default getLocalIPAddress();
+export default getLocalIPAddress()

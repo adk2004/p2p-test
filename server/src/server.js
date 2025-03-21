@@ -41,13 +41,13 @@ io.on("connection", (socket) => {
 
   socket.on("register", async (data) => await registerHandler(socket, data));
   socket.on("groupMessage", async (msg) => {
-    console.log("Message from client:", msg);
+    
     // const user = await User.findOne({ socketId: socket.id });
     const user = await User.findOne({ socketId: socket.id });
     const message = new Message({ text: msg, type: "group" });
     await message.save();
-    
-    io.emit("message", { message: msg });
+    console.log("Message :", msg, "by", user);
+    socket.broadcast.emit("message", { message: msg, user: user });
   });
   socket.on("directMessage", (data) => {
     console.log("Message from client:", data.msg, "for ", data.socketId);
@@ -75,8 +75,11 @@ io.on("connection", (socket) => {
   });
   socket.on("disconnect", async () => {
     console.log("Client disconnected:", socket.id);
-    const user = await User.findOne({ socketId: socket.id });
-    await File.deleteMany({ owner: user._id });
+    // const user = await User.findOne({ socketId: socket.id });
+    // user.status = "offline";
+    // user.lastActive = Date.now();
+    // await user.save();
+    // await File.deleteMany({ owner: user._id });
   });
 });
 

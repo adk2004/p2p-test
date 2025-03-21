@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import { server } from "./server.js";
-// import HOST from "./utils/serverIp.js";
+import HOST from "./utils/serverIp.js";
 
 dotenv.config({
   path: "./.env",
@@ -9,7 +9,7 @@ dotenv.config({
 
 connectDB()
   .then(() => {
-    server.listen(process.env.PORT || 9000, "192.168.66.59", () => {
+    server.listen(process.env.PORT || 9000, HOST , () => {
       console.log(`Server is running on port ${process.env.PORT || 9000}`);
     });
   })

@@ -13,7 +13,7 @@ socket.on("connect", () => {
     {
       username: "Akshay",
       ip: host,
-      fileList: getFolderContents("C:\\Users\\Hp\\Documents\\osLab"),
+      fileList: getFolderContents("C:\\Users\\Hp\\Documents"),
     },
     (response) => {
       if (response.success) {
@@ -25,7 +25,7 @@ socket.on("connect", () => {
   );
 });
 socket.on("message", (data) => {
-  console.log(`Message from server:, ${data.message} by ${data.owner}`);
+  console.log(`Message from server:, ${data.message} `);
 });
 socket.on("connect_error", (err) => {
   console.error("Connection error:", err.message);
