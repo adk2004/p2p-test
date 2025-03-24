@@ -39,47 +39,49 @@ app.use("/api/users", userRouter);
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
-  socket.on("register", async (data) => await registerHandler(socket, data));
-  socket.on("groupMessage", async (msg) => {
-    
+  socket.on(
+    "register",
+    async (data) => await registerHandler(io, socket, data)
+  );
+  socket.on("groupMessage", async (data) => {
     // const user = await User.findOne({ socketId: socket.id });
-    const user = await User.findOne({ socketId: socket.id });
-    const message = new Message({ text: msg, type: "group" });
+    console.log(data);
+    const message = new Message({ text: data.msg, type: "group" });
     await message.save();
-    console.log("Message :", msg, "by", user);
-    socket.broadcast.emit("message", { message: msg, user: user });
+    console.log("Message :", data.msg, "by", data.user);
+    socket.broadcast.emit("gmessage", { message: data.msg, user: data.user });
   });
   socket.on("directMessage", (data) => {
     console.log("Message from client:", data.msg, "for ", data.socketId);
-    io.to(data.socketId).emit("message", { message: data.msg });
+    io.to(data.socketId).emit("dmessage", {
+      message: data.msg,
+      user: data.user,
+    });
   });
   socket.on("requestFile", async (data) => {
-    const user = await File.aggregate([
-      {
-        $match: { filePath: data.filePath },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "owner",
-          foreignField: "_id",
-          as: "owner",
-        },
-      },
-      {
-        $unwind: "$owner",
-      },
-    ]);
-    console.log("User:", user);
-    io.to(user[0].socketId).emit("file", { filePath: data.filePath });
+    console.log("File request for:", data.fileId);
+    const file = await File.findOne({ _id: data.fileId });
+    const user = await User.findOne({ ip_address: file.ip });
+    console.log("Requesting file from:", user);
+    console.log("Requesting file :", file);
+    io.to(user.socketId).emit("fileRequest", {
+      file: file.path,
+      userSocketId: socket.id,
+    });
+  });
+  socket.on("portInfo", (data) => {
+    io.to(data.userSocketId).emit("free-port", {
+      availablePort: data.availablePort,
+    });
   });
   socket.on("disconnect", async () => {
     console.log("Client disconnected:", socket.id);
-    // const user = await User.findOne({ socketId: socket.id });
-    // user.status = "offline";
-    // user.lastActive = Date.now();
-    // await user.save();
-    // await File.deleteMany({ owner: user._id });
+    const user = await User.findOne({ socketId: socket.id });
+    if (!user) return;
+    socket.broadcast.emit("userDiconnect", { user: user._id });
+    console.log("User:", user);
+    await File.deleteMany({ owner: user._id });
+    await User.deleteOne({ socketId: socket.id });
   });
 });
 

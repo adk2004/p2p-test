@@ -1,50 +1,54 @@
-const WebSocket = require("ws");
-const fs = require("fs");
-const path = require("path");
+import WebSocket, { WebSocketServer } from "ws";
+import { createReadStream } from "fs";
+import { basename } from "path";
 
-const serverIP = "192.168.50.18"; // Replace with your reciever's IPv4 address
-const serverPort = 9000;
+const senderIP = "192.168.66.75"; // Sender's IPv4 address
 
-const ws = new WebSocket(`ws://${serverIP}:${serverPort}`);
+export const startSendingFile = (filePath, availablePort) => {
+  const wss = new WebSocketServer({ host: senderIP, port: availablePort });
 
-// Path to the file to send
-const filePath = "C:\\Users\\Hp\\Downloads\\Telegram Desktop\\S03-E13 Breaking Bad [720p] [Eng] @The_Webseries_Library.mkv";
+  console.log(`WebSocket server started at ws://${senderIP}:${availablePort}`);
 
+  wss.on("connection", (ws) => {
+    console.log("Receiver connected.");
+    const fileName = basename(filePath);
 
-ws.on("open", () => {
-  console.log("Connected to server.");
+    ws.send(JSON.stringify({ type: "startFile", fileName }));
 
-  const fileName = path.basename(filePath);
+    const stream = createReadStream(filePath, { highWaterMark: 64 * 1024 });
 
-  // Notify server about the file name
-  ws.send(
-    JSON.stringify({
-      type: "startFile",
-      fileName,
-    })
-  );
+    stream.on("data", (chunk) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(chunk, { binary: true });
+      }
+    });
 
-  const stream = fs.createReadStream(filePath, { highWaterMark: 64 * 1024 }); // 64 KB chunks
+    stream.on("end", () => {
+      ws.send(JSON.stringify({ type: "endOfFile" }));
+      console.log("File transfer complete.");
+      ws.close();
+      wss.close(() => {
+        console.log("WebSocket server closed, releasing port.");
+      });
+    });
 
-  stream.on("data", (chunk) => {
-    ws.send(
-      JSON.stringify({
-        type: "fileChunk",
-        chunk: chunk.toString("base64"), // Encode chunk to Base64
-      })
-    );
+    stream.on("error", (err) => {
+      console.error("Error reading file:", err);
+      ws.send(JSON.stringify({ type: "error", message: "File read error" }));
+      ws.close();
+      wss.close();
+    });
+
+    ws.on("close", () => {
+      console.log("Receiver disconnected.");
+    });
   });
 
-  stream.on("end", () => {
-    ws.send(
-      JSON.stringify({
-        type: "endOfFile",
-      })
-    );
-    console.log("File transfer complete.");
+  wss.on("close", () => {
+    console.log("WebSocket server fully shut down.");
   });
-});
 
-ws.on("close", () => {
-  console.log("Disconnected from server.");
-});
+  wss.on("error", (err) => {
+    console.error("WebSocket Server Error:", err.message);
+  });
+};

@@ -7,14 +7,15 @@ function getLocalIPAddress() {
     const interfaceInfo = networkInterfaces[interfaceName];
     for (const net of interfaceInfo) {
        if (
-        net.family === "IPv4" &&
-        !net.internal &&
-        (interfaceName === "Ethernet 2")
-      ) { {
-        // console.log(net.address);
-        return net.address;
-        }
-      }
+         net.family === "IPv4" &&
+         !net.internal &&
+         (interfaceName === "Ethernet 2")
+       ) {
+         {
+           // console.log(net.address);
+           return net.address;
+         }
+       }
     }
   }
 

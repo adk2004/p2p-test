@@ -42,8 +42,12 @@ const getUsers = asyncHandler(async (req, res) => {
 });
 
 const getFiles =  asyncHandler(async (req, res) => {
+  const { owner } = req.params;
+  if (!owner) {
+    throw new ApiError(400, "Owner is required");
+  }
   try {
-    const files = await File.find();
+    const files = await File.find({ owner });
     res.status(200).json(files);
   } catch (error) {
     throw new ApiError(500, "Internal Server Error");
@@ -61,7 +65,7 @@ const requestFileIp = asyncHandler(async (req, res) => {
       throw new ApiError(404, "File not found");
     }
     
-    res.status(200).json(file.ip);
+    res.status(200).json({ ip : file.ip });
   } catch (error) {
     throw new ApiError(
       error.statusCode || 500,

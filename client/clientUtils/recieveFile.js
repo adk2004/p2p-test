@@ -1,49 +1,58 @@
-const WebSocket = require("ws");
-const fs = require("fs");
-const path = require("path");
+import WebSocket from "ws";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const serverIP = "192.168.50.18";
-const serverPort = 9000;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const publicFolder = path.join(__dirname, "public");
-if (!fs.existsSync(publicFolder)) {
-  fs.mkdirSync(publicFolder);
-}
+export const startReceivingFile = (senderIP, senderPort) => {
+  const ws = new WebSocket(`http://${senderIP}:${senderPort}`);
 
-const wss = new WebSocket.Server({ host: serverIP, port: serverPort });
+  const publicFolder = path.join(__dirname, "public");
+  if (!fs.existsSync(publicFolder)) {
+    fs.mkdirSync(publicFolder);
+  }
 
-console.log(`WebSocket server running at ws://${serverIP}:${serverPort}/`);
+  let fileStream = null;
+  let filePath = null;
 
-let fileStream = null;
-
-wss.on("connection", (ws) => {
-  console.log("Client connected.");
+  ws.on("open", () => {
+    console.log("Connected to sender.");
+  });
 
   ws.on("message", (message) => {
-    const data = JSON.parse(message);
+    try {
+      const data = JSON.parse(message);
 
-    if (data.type === "startFile") {
-      
-      const fileName = data.fileName || "uploaded_file";
-      const filePath = path.join(publicFolder, fileName);
-      fileStream = fs.createWriteStream(filePath);
-      console.log(`Receiving file: ${fileName}`);
-    } else if (data.type === "fileChunk") {
-      if (fileStream) {
-        fileStream.write(Buffer.from(data.chunk, "base64"));
+      if (data.type === "startFile") {
+        const fileName = data.fileName || "downloaded_file";
+        filePath = path.join(publicFolder, fileName);
+        fileStream = fs.createWriteStream(filePath);
+        console.log(`Receiving file: ${fileName}`);
+      } else if (data.type === "fileChunk") {
+        if (fileStream) {
+          fileStream.write(Buffer.from(data.chunk, "base64"));
+        }
+      } else if (data.type === "endOfFile") {
+        if (fileStream) {
+          fileStream.end();
+          console.log(`File received and saved at: ${filePath}`);
+        }
+        ws.close();
       }
-    } else if (data.type === "endOfFile") {
-      if (fileStream) {
-        fileStream.end();
-        console.log("File transfer complete.");
-      }
+    } catch (err) {
+      console.error("Error processing message:", err);
     }
   });
 
   ws.on("close", () => {
-    console.log("Client disconnected.");
+    console.log("Disconnected from sender.");
     if (fileStream) {
       fileStream.end();
     }
   });
-});
+
+  ws.on("error", (err) => {
+    console.error("WebSocket error:", err.message);
+  });
+};

@@ -9,7 +9,7 @@ const getLocalIPAddress = () => {
       if (
         net.family === "IPv4" &&
         !net.internal &&
-        (interfaceName === "Ethernet 2" || interfaceName === "Wi-Fi")
+        (interfaceName === "Ethernet 2")
       ) {
         // console.log(net.address);
         return net.address;

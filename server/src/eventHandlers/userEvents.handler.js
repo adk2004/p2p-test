@@ -1,7 +1,7 @@
 import { User } from "../models/user.model.js";
 import { File } from "../models/file.model.js";
 
-const registerHandler = async (socket, data) => {
+const registerHandler = async (io, socket, data) => {
   try {
     const { username, fileList, ip } = data;
     if (!fileList || !username || !ip) {
@@ -11,8 +11,11 @@ const registerHandler = async (socket, data) => {
       });
     }
 
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({
+      username: username.toLowerCase(),
+    });
     if (existingUser) {
+      console.log("Exec");
       return socket.emit("register_response", {
         success: false,
         message: "Username is already in use = " + existingUser.username,
@@ -24,7 +27,7 @@ const registerHandler = async (socket, data) => {
       ip_address: ip,
       socketId: socket.id,
     });
-
+    console.log("New user registered:", newUser);
     const filePromises = fileList.map((file) =>
       File.create({
         path: file.path,
@@ -36,7 +39,7 @@ const registerHandler = async (socket, data) => {
     );
 
     await Promise.all(filePromises);
-
+    socket.broadcast.emit("user_joined", { newUser });
     return socket.emit("register_response", {
       success: true,
       message: "User registered successfully",

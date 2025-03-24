@@ -6,7 +6,7 @@ const router = Router();
 router.route("/groupMessages").get(getGroupMessages);
 router.route("/directMessages/:userId").get(getDirectMessages);
 router.route("/users").get(getUsers);
-router.route("/files").get(getFiles);
+router.route("/files/:owner").get(getFiles);
 router.route("/fileIp/:fileId").get(requestFileIp);
 
 export default router;
