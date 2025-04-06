@@ -6,7 +6,7 @@ import getPort from "get-port";
 
 const host = getLocalIPAddress();
 
-const socket = io(`http://192.168.66.75:9000`);
+const socket = io(`http://${host}:9000`);
 
 socket.on("connect", () => {
   console.log("Connected to server with socket ID:", socket.id);
@@ -15,7 +15,7 @@ socket.on("connect", () => {
     {
       username: "Heloo User",
       ip: host,
-      fileList: getFolderContents("C:\\Users\\Hp\\Downloads"),
+      fileList: getFolderContents("C:\\Users\\Hp\\Downloads\\"),
     },
     (response) => {
       if (response.success) {

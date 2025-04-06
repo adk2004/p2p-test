@@ -27,12 +27,14 @@ const registerHandler = async (io, socket, data) => {
       ip_address: ip,
       socketId: socket.id,
     });
-    console.log("New user registered:", newUser);
+    console.log("New user registered:", newUser.username);
     const filePromises = fileList.map((file) =>
+      console.log("File:", file.name) ||
       File.create({
         path: file.path,
         name: file.name,
         ip,
+        size: file.size,
         fileType: file.type,
         owner: newUser._id,
       })

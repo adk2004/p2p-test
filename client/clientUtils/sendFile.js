@@ -1,8 +1,9 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { createReadStream } from "fs";
 import { basename } from "path";
+import { getLocalIPAddress } from "./getIp.js";
 
-const senderIP = "192.168.66.75"; // Sender's IPv4 address
+const senderIP = getLocalIPAddress(); // Sender's IPv4 address
 
 export const startSendingFile = (filePath, availablePort) => {
   const wss = new WebSocketServer({ host: senderIP, port: availablePort });
@@ -14,7 +15,6 @@ export const startSendingFile = (filePath, availablePort) => {
     const fileName = basename(filePath);
 
     ws.send(JSON.stringify({ type: "startFile", fileName }));
-
     const stream = createReadStream(filePath, { highWaterMark: 64 * 1024 });
 
     stream.on("data", (chunk) => {

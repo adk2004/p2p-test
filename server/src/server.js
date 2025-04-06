@@ -67,6 +67,7 @@ io.on("connection", (socket) => {
     io.to(user.socketId).emit("fileRequest", {
       file: file.path,
       userSocketId: socket.id,
+      size : file.size,
     });
   });
   socket.on("portInfo", (data) => {
@@ -78,7 +79,7 @@ io.on("connection", (socket) => {
     console.log("Client disconnected:", socket.id);
     const user = await User.findOne({ socketId: socket.id });
     if (!user) return;
-    socket.broadcast.emit("userDiconnect", { user: user._id });
+    socket.broadcast.emit("userDisconnect", { user: user._id });
     console.log("User:", user);
     await File.deleteMany({ owner: user._id });
     await User.deleteOne({ socketId: socket.id });

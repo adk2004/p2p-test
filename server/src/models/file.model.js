@@ -1,28 +1,31 @@
 import mongoose, { Schema } from "mongoose";
 
 const fileSchema = new Schema(
-  { 
+  {
     path: {
       type: String,
       required: true,
       trim: true,
     },
-    name : {
-      type : String,
-      required : true,
+    name: {
+      type: String,
+      required: true,
     },
     owner: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
     ip: {
-      type : String,
-      required : true,
+      type: String,
+      required: true,
+    },
+    size: {
+      type: Number,
     },
     fileType: {
       type: String,
       lowercase: true,
-      required : true,
+      required: true,
       enum: ["file", "folder"],
     },
   },

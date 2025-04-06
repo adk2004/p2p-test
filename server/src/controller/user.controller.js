@@ -74,4 +74,25 @@ const requestFileIp = asyncHandler(async (req, res) => {
   }
 });
 
-export { getGroupMessages, getDirectMessages, getUsers, getFiles, requestFileIp };
+const searchFile = asyncHandler(async (req, res) => {
+  const { squery } = req.params;
+  if (!squery) {
+    throw new ApiError(400, "File Name is required");
+  }
+  try {
+    const files = await File.find({
+      $and :[
+        { name: { $regex: squery, $options: "i" } },
+        { fileType: "file" }
+      ]
+    });
+    res.status(200).json(files);
+  } catch (error) {
+    throw new ApiError(
+      error.statusCode || 500,
+      error.message || "Internal Server Error"
+    );
+  }
+});
+
+export { getGroupMessages, getDirectMessages, getUsers, getFiles, requestFileIp, searchFile };
